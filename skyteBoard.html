@@ -8,9 +8,10 @@
 	function Atleta(caminhoDaImagem, xInicial, yInicial) {
 		this.imagem = new Image();
 		this.imagem.src = caminhoDaImagem;
-		this.x = xInicial;
-		this.y = yInicial;
+		this.posicaoX = xInicial;
+		this.posicaoY = yInicial;
 		
+		this.pulando = false;
 		this.eventosIniciais();
 	}
 	
@@ -27,11 +28,40 @@
 		},
 		
 		desenharAtleta: function() {
-			skt8.contexto.drawImage(this.imagem, this.x, this.y, this.largura, this.altura);
+			skt8.contexto.drawImage(this.imagem, this.posicaoX, this.posicaoY, this.largura, this.altura);
 			skt8.contexto.strokeStyle = "darkred";
 			skt8.contexto.lineWidth = 0.2;
-			skt8.contexto.strokeRect(this.x, this.y, this.largura, this.altura);
-			console.log('desenhado atleta.');
+			skt8.contexto.strokeRect(this.posicaoX, this.posicaoY, this.largura, this.altura);
+		},
+		
+		mover: function (px, py) {
+			if(this.pulando || (this.posicaoX + px) < (skt8.canvas.width - this.imagem.width) && (this.posicaoX + px) >= 0) {
+				this.posicaoX += px;
+				this.posicaoY += py;
+			}
+		},
+		
+		pular: function () {
+			var atleta = this;
+			if(atleta.pulando) {
+				return;
+			}
+			
+			var sobe = true;
+			atleta.pulando = true;
+			var acao = setInterval(function () {
+				if(sobe && atleta.posicaoY > 170) {
+					atleta.mover(0, -10);
+				} else {
+					sobe = false;
+					atleta.mover(0, 10);
+				}
+				
+				if(atleta.posicaoY == 270) {
+					clearInterval(acao);
+					atleta.pulando = false;
+				}
+			}, 20);
 		}
 	}
 	
@@ -55,14 +85,41 @@
 				skt8.desenharCenario();
 				skt8.atleta.desenharAtleta();
 		 
-			}, 1000);
+			}, 20);
+			
+			document.onkeydown = this.controleAtleta;
 		},
 		
 		desenharCenario: function () {
+		  // Preenche o fundo com cinza escuro
+		  skt8.contexto.fillStyle = "dimgray";
+		  skt8.contexto.fillRect(0, 0, canvas.width, canvas.height);
+	  
 		  // Desenha o chão
 		  skt8.contexto.fillStyle = "lightgray";
 		  skt8.contexto.fillRect(0, 350, canvas.width, 30);
-		  console.log('desenhado cenario.');
+		},
+		
+		controleAtleta: function (event) {
+			switch (event.which) {
+				case 37: // Ceta Esquerda
+				if(skt8.atleta.pulando) return;
+					skt8.atleta.mover(-10, 0);
+				break;
+				case 38: // Ceta cima
+					skt8.atleta.pular();
+				break;
+				case 39: // Ceta Direita
+					if(skt8.atleta.pulando) return;
+					skt8.atleta.mover(10, 0);
+				break;
+				case 40: // Ceta baixo
+					skt8.atleta.mover(0, 10);
+					console.log('Abaixando');
+				break;
+			}
+			
+			
 		}
 	}
 	
